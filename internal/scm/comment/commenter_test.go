@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/envpilot/gitops/internal/domain"
+	"github.com/envpilot/contracts/domain"
 )
 
 func TestBuildEnvironmentCommentIncludesURLAndStatus(t *testing.T) {

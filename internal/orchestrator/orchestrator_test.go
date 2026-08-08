@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/envpilot/gitops/internal/domain"
+	"github.com/envpilot/contracts/domain"
 	"github.com/envpilot/gitops/internal/gitops"
 	"github.com/envpilot/gitops/internal/store"
 )

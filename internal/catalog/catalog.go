@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/envpilot/gitops/internal/domain"
+	"github.com/envpilot/contracts/domain"
 )
 
 type Catalog struct {

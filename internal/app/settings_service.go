@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/envpilot/contracts/domain"
 	"github.com/envpilot/gitops/internal/config"
-	"github.com/envpilot/gitops/internal/domain"
 	"github.com/envpilot/gitops/internal/store"
 )
 

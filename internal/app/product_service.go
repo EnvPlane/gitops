@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/envpilot/gitops/internal/domain"
+	"github.com/envpilot/contracts/domain"
 	"github.com/envpilot/gitops/internal/store"
 )
 

@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/envpilot/contracts/domain"
 	"github.com/envpilot/gitops/internal/catalog"
 	"github.com/envpilot/gitops/internal/config"
-	"github.com/envpilot/gitops/internal/domain"
 	"github.com/envpilot/gitops/internal/gitops"
 	"github.com/envpilot/gitops/internal/store"
 )
