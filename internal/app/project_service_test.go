@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"envpilot/internal/domain"
-	"envpilot/internal/store"
+	"github.com/envpilot/gitops/internal/domain"
+	"github.com/envpilot/gitops/internal/store"
 )
 
 func TestNormalizeRepositoryIdentity(t *testing.T) {

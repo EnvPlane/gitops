@@ -4,17 +4,17 @@ import (
 	"context"
 	"time"
 
-	"envpilot/internal/domain"
-	"envpilot/internal/gitops"
-	"envpilot/internal/store"
+	"github.com/envpilot/gitops/internal/domain"
+	"github.com/envpilot/gitops/internal/gitops"
+	"github.com/envpilot/gitops/internal/store"
 )
 
 type DeploymentBackendType string
 
 const (
-	DeploymentBackendHelmDirect      DeploymentBackendType = "helm_direct"
-	DeploymentBackendFluxCD          DeploymentBackendType = "fluxcd"
-	DeploymentBackendGitOpsManifest  DeploymentBackendType = "gitops_manifest"
+	DeploymentBackendHelmDirect     DeploymentBackendType = "helm_direct"
+	DeploymentBackendFluxCD         DeploymentBackendType = "fluxcd"
+	DeploymentBackendGitOpsManifest DeploymentBackendType = "gitops_manifest"
 )
 
 type Manifest struct {
@@ -67,10 +67,10 @@ func (b *GitOpsManifestBackend) Status(_ context.Context, environment domain.Env
 }
 
 type EnvironmentOrchestrator struct {
-	store    store.EnvironmentStore
-	backend  DeploymentBackend
-	writer   gitops.Writer
-	now      func() time.Time
+	store   store.EnvironmentStore
+	backend DeploymentBackend
+	writer  gitops.Writer
+	now     func() time.Time
 }
 
 func New(store store.EnvironmentStore, renderer gitops.Renderer, writer gitops.Writer) *EnvironmentOrchestrator {
@@ -79,9 +79,9 @@ func New(store store.EnvironmentStore, renderer gitops.Renderer, writer gitops.W
 
 func NewWithBackend(store store.EnvironmentStore, backend DeploymentBackend, writer gitops.Writer) *EnvironmentOrchestrator {
 	return &EnvironmentOrchestrator{
-		store:    store,
-		backend:  backend,
-		writer:   writer,
+		store:   store,
+		backend: backend,
+		writer:  writer,
 		now: func() time.Time {
 			return time.Now().UTC()
 		},

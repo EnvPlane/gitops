@@ -1,4 +1,4 @@
-module envpilot
+module github.com/envpilot/gitops
 
 go 1.25.0
 

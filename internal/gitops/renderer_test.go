@@ -8,7 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"envpilot/internal/domain"
+	"github.com/envpilot/gitops/internal/domain"
 )
 
 func TestFluxRendererUsesObservedFeatureEnvironmentPattern(t *testing.T) {

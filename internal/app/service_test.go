@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
-	"envpilot/internal/catalog"
-	"envpilot/internal/config"
-	"envpilot/internal/domain"
-	"envpilot/internal/gitops"
-	"envpilot/internal/store"
+	"github.com/envpilot/gitops/internal/catalog"
+	"github.com/envpilot/gitops/internal/config"
+	"github.com/envpilot/gitops/internal/domain"
+	"github.com/envpilot/gitops/internal/gitops"
+	"github.com/envpilot/gitops/internal/store"
 )
 
 func TestCreateEnvironmentAppliesProductDefaults(t *testing.T) {

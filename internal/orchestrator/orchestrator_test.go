@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"envpilot/internal/domain"
-	"envpilot/internal/gitops"
-	"envpilot/internal/store"
+	"github.com/envpilot/gitops/internal/domain"
+	"github.com/envpilot/gitops/internal/gitops"
+	"github.com/envpilot/gitops/internal/store"
 )
 
 func TestCreateTriggersRendererAndPersistsCreatingStatus(t *testing.T) {
