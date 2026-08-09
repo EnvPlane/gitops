@@ -1,23 +1,34 @@
-# EnvPilot GitOps
+# EnvPlane GitOps
 
-GitOps rendering and repository operations for EnvPilot.
+GitOps rendering and repository operations for [EnvPlane](https://envplane.dev).
+The package turns environment intent into reviewable manifests and provides the
+boundary for repository-backed delivery.
 
-## Scope
+## Responsibilities
 
-- Flux manifest rendering.
-- Environment manifest set generation.
-- Local and repository-backed GitOps writers.
-- Git commit and PR proposal helpers.
-- Environment orchestration boundary around rendered GitOps manifests.
+- Render Flux CD and Kubernetes manifest sets.
+- Generate environment-specific configuration.
+- Support local and repository-backed GitOps writers.
+- Prepare commit and pull-request proposals.
 
-## Source Origin
+## Development
 
-This repository was split from:
+```bash
+go test ./...
+go vet ./...
+```
 
-- `internal/gitops`
-- `internal/orchestrator`
-- `apps/gitops-committer`
+## Related components
 
-## Follow-up
+- [Control Plane](https://github.com/EnvPlane/control-plane)
+- [Contracts](https://github.com/EnvPlane/contracts)
+- [Deploy](https://github.com/EnvPlane/deploy)
 
-Turn the current library boundary into a dedicated commit/render worker if Git push and PR creation need to run outside the control plane.
+## Security
+
+Git credentials and signing keys are runtime configuration. Do not commit
+tokens, private keys, or repository URLs containing credentials.
+
+## Status
+
+Private EnvPlane platform component under active development.
