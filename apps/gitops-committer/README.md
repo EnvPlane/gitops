@@ -1,4 +1,4 @@
-# EnvPilot GitOps Committer App
+# EnvPlane GitOps Committer App
 
 Boundary for the future standalone GitOps rendering and commit worker.
 

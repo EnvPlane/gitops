@@ -240,7 +240,7 @@ func TestRepositoryWriterPullRequestStrategyCreatesProposal(t *testing.T) {
 		AuthorName:       "envpilot",
 		AuthorEmail:      "envpilot@example.com",
 		PullRequestAPI:   "https://api.github.com",
-		PullRequestTitle: "EnvPilot pr-123",
+		PullRequestTitle: "EnvPlane pr-123",
 		PullRequestBody:  "Generated for pr-123",
 	})
 	if err != nil {

@@ -31,7 +31,7 @@ func TestPullRequestServiceCreatesGitHubPullRequest(t *testing.T) {
 		APIBase:  "https://api.github.com",
 		Token:    "token",
 		RepoURL:  "https://github.com/acme/gitops.git",
-		Title:    "EnvPilot pr-123",
+		Title:    "EnvPlane pr-123",
 		Body:     "body",
 		Head:     "envpilot/pr-123",
 		Base:     "main",

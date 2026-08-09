@@ -242,7 +242,7 @@ func (s *EnvironmentService) validateCleanupSafety(env domain.Environment) error
 	config := defaultCleanupSafetyConfig()
 	if len(s.cfg.CleanupProtectedNamespaces) > 0 {
 		config.ProtectedNamespaces = s.cfg.CleanupProtectedNamespaces
-		config.DeleteEnvPilotLabeledOnly = s.cfg.CleanupRequireEnvPilotLabels
+		config.DeleteEnvPlaneLabeledOnly = s.cfg.CleanupRequireEnvPlaneLabels
 	}
 	if err := validateCleanupSafetyConfig(config, []string{env.Namespace}); err != nil {
 		return ValidationError{Message: fmt.Sprintf("cleanup safety validation failed: %v", err)}
@@ -891,7 +891,7 @@ func (s *EnvironmentService) gitOpsWriterForEnvironment(ctx context.Context, env
 		AuthorName:        s.cfg.GitAuthorName,
 		AuthorEmail:       s.cfg.GitAuthorEmail,
 		CreatePullRequest: branchStrategy == "pull-request",
-		PullRequestTitle:  "EnvPilot " + environment.ID,
+		PullRequestTitle:  "EnvPlane " + environment.ID,
 		PullRequestBody:   "Generated GitOps manifests for " + environment.ID + ".",
 	})
 }
@@ -975,7 +975,7 @@ func gitSecretValue(ctx context.Context, repositorySecretRef string, projectSecr
 
 type cleanupSafetyConfig struct {
 	ProtectedNamespaces       []string
-	DeleteEnvPilotLabeledOnly bool
+	DeleteEnvPlaneLabeledOnly bool
 	FinalizerStrategy         string
 }
 
@@ -991,7 +991,7 @@ var defaultProtectedNamespaces = []string{
 func defaultCleanupSafetyConfig() cleanupSafetyConfig {
 	return cleanupSafetyConfig{
 		ProtectedNamespaces:       append([]string{}, defaultProtectedNamespaces...),
-		DeleteEnvPilotLabeledOnly: true,
+		DeleteEnvPlaneLabeledOnly: true,
 		FinalizerStrategy:         "foreground",
 	}
 }
@@ -1001,8 +1001,8 @@ func validateCleanupSafetyConfig(config cleanupSafetyConfig, targetNamespaces []
 	if len(protected) == 0 {
 		return fmt.Errorf("protected namespaces list must not be empty")
 	}
-	if !config.DeleteEnvPilotLabeledOnly {
-		return fmt.Errorf("cleanup must delete only resources with EnvPilot labels")
+	if !config.DeleteEnvPlaneLabeledOnly {
+		return fmt.Errorf("cleanup must delete only resources with EnvPlane labels")
 	}
 	switch normalizeFinalizerStrategy(config.FinalizerStrategy) {
 	case "none", "foreground", "orphan":
