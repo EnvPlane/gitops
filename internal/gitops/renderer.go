@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	"github.com/envpilot/contracts/domain"
+	"gopkg.in/yaml.v3"
 )
 
 type FluxOptions struct {
@@ -312,19 +313,20 @@ func (r FluxRenderer) RenderValuesPreview(environment domain.Environment) map[st
 }
 
 func ValuesYAML(values map[string]string) string {
-	keys := make([]string, 0, len(values))
-	for key := range values {
-		keys = append(keys, key)
+	normalized := make(map[string]string, len(values))
+	for key, value := range values {
+		if len(value) >= 2 && strings.HasPrefix(value, "'") && strings.HasSuffix(value, "'") {
+			value = strings.TrimSuffix(strings.TrimPrefix(value, "'"), "'")
+		}
+		normalized[key] = value
 	}
-	sort.Strings(keys)
-	var output strings.Builder
-	for _, key := range keys {
-		output.WriteString(key)
-		output.WriteString(": ")
-		output.WriteString(values[key])
-		output.WriteString("\n")
+	payload, err := yaml.Marshal(normalized)
+	if err != nil {
+		return ""
 	}
-	return output.String()
+	output := strings.ReplaceAll(string(payload), `: "true"`, ": 'true'")
+	output = strings.ReplaceAll(output, `: "false"`, ": 'false'")
+	return output
 }
 
 func deploymentServices(environment domain.Environment) []domain.ServiceOverride {
