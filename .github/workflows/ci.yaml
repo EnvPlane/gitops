@@ -47,6 +47,8 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - name: Use published contracts module
+        run: go mod edit -dropreplace=github.com/envpilot/contracts
       - name: Enforce public module boundary
         run: |
           test -d render
@@ -58,7 +60,7 @@ jobs:
       - run: go vet ./...
       - uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.64
+          version: v2.1.6
       - run: go test -race ./...
       - run: go test -coverprofile=cover.out ./...
       - name: Enforce coverage floor
