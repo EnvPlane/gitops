@@ -47,4 +47,21 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - name: Enforce public module boundary
+        run: |
+          test -d render
+          test -d writer
+          test -f docs/module-ownership.md
+      - name: Verify public package reachability
+        run: ./scripts/check-public-reachability.sh
       - run: go test ./...
+      - run: go vet ./...
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64
+      - run: go test -race ./...
+      - run: go test -coverprofile=cover.out ./...
+      - name: Enforce coverage floor
+        run: |
+          total="$(go tool cover -func=cover.out | awk '/^total:/ {gsub(/%/, "", $NF); print $NF}')"
+          awk -v total="$total" 'BEGIN { if (total < 20) { print "coverage below 20%: " total "%"; exit 1 } }'

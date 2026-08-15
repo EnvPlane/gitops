@@ -817,7 +817,7 @@ spec:
           effect: NoExecute
       containers:
         - name: {{ .Name }}
-          image: {{ .Name }}:{{ .Tag | serviceImageTag }}
+          image: {{ if .Image }}{{ .Image }}:{{ .Tag | serviceImageTag }}{{ else }}{{ .Name }}:{{ .Tag | serviceImageTag }}{{ end }}
           ports:
             - containerPort: 8080
 ---

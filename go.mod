@@ -3,18 +3,13 @@ module github.com/envpilot/gitops
 go 1.25.0
 
 require (
-	github.com/envpilot/contracts v0.1.0
-	github.com/jackc/pgx/v5 v5.9.2
-	github.com/redis/go-redis/v9 v9.19.0
+	github.com/envpilot/contracts v0.1.3
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+replace github.com/envpilot/contracts => ../contracts
+
 require (
-	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/puddle/v2 v2.2.2 // indirect
-	go.uber.org/atomic v1.11.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/text v0.29.0 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )
