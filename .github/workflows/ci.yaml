@@ -47,12 +47,13 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - name: Use published contracts module
+        run: go mod edit -dropreplace=github.com/envpilot/contracts
       - name: Scan Go dependencies
         uses: golang/govulncheck-action@v1
         with:
           go-package: ./...
-      - name: Use published contracts module
-        run: go mod edit -dropreplace=github.com/envpilot/contracts
+          repo-checkout: false
       - name: Enforce public module boundary
         run: |
           test -d render
@@ -62,7 +63,7 @@ jobs:
         run: ./scripts/check-public-reachability.sh
       - run: go test ./...
       - run: go vet ./...
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v7
         with:
           version: v2.1.6
       - run: go test -race ./...
