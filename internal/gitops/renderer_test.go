@@ -2,6 +2,7 @@ package gitops
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -596,7 +597,7 @@ func validateRenderedYAMLDocuments(content []byte, path string) error {
 	for {
 		var document interface{}
 		err := decoder.Decode(&document)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return nil
 		}
 		if err != nil {

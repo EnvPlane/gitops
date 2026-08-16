@@ -172,7 +172,7 @@ func (w *RepositoryWriter) prepare(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
-	if err := os.MkdirAll(filepath.Dir(w.target.Workspace), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(w.target.Workspace), 0o750); err != nil {
 		return err
 	}
 	cloneURL := w.target.URL

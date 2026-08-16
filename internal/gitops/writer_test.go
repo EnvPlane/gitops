@@ -34,7 +34,7 @@ func newRepositoryWriterForRemovePathTests(t *testing.T) (*RepositoryWriter, str
 	t.Helper()
 	repoRoot := t.TempDir()
 	writeDir := filepath.Join(repoRoot, "clusters", "dev")
-	if err := os.MkdirAll(writeDir, 0o755); err != nil {
+	if err := os.MkdirAll(writeDir, 0o750); err != nil {
 		t.Fatalf("mkdir write dir: %v", err)
 	}
 	writer := &RepositoryWriter{
@@ -48,7 +48,7 @@ func newRepositoryWriterForRemovePathTests(t *testing.T) (*RepositoryWriter, str
 func TestRepositoryWriterRemovePathRejectsTraversal(t *testing.T) {
 	writer, repoRoot, _ := newRepositoryWriterForRemovePathTests(t)
 	outsideDir := filepath.Join(repoRoot, "outside")
-	if err := os.MkdirAll(outsideDir, 0o755); err != nil {
+	if err := os.MkdirAll(outsideDir, 0o750); err != nil {
 		t.Fatalf("mkdir outside dir: %v", err)
 	}
 	if err := writer.RemovePath(context.Background(), "../outside", "delete"); err == nil {
@@ -70,10 +70,10 @@ func TestRepositoryWriterRemovePathRejectsAbsolutePath(t *testing.T) {
 func TestRepositoryWriterRemovePathDeletesNestedValidPath(t *testing.T) {
 	writer, _, writeDir := newRepositoryWriterForRemovePathTests(t)
 	nestedFile := filepath.Join(writeDir, "environments", "pr-1", "nested", "values.yaml")
-	if err := os.MkdirAll(filepath.Dir(nestedFile), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(nestedFile), 0o750); err != nil {
 		t.Fatalf("mkdir nested: %v", err)
 	}
-	if err := os.WriteFile(nestedFile, []byte("kind: ConfigMap\n"), 0o644); err != nil {
+	if err := os.WriteFile(nestedFile, []byte("kind: ConfigMap\n"), 0o600); err != nil {
 		t.Fatalf("write nested file: %v", err)
 	}
 	if err := writer.RemovePath(context.Background(), "environments/pr-1/nested", "delete"); err != nil {
@@ -87,10 +87,10 @@ func TestRepositoryWriterRemovePathDeletesNestedValidPath(t *testing.T) {
 func TestRepositoryWriterRemovePathDeletesNormalPath(t *testing.T) {
 	writer, _, writeDir := newRepositoryWriterForRemovePathTests(t)
 	envFile := filepath.Join(writeDir, "environments", "pr-2", "namespace.yaml")
-	if err := os.MkdirAll(filepath.Dir(envFile), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(envFile), 0o750); err != nil {
 		t.Fatalf("mkdir env dir: %v", err)
 	}
-	if err := os.WriteFile(envFile, []byte("kind: Namespace\n"), 0o644); err != nil {
+	if err := os.WriteFile(envFile, []byte("kind: Namespace\n"), 0o600); err != nil {
 		t.Fatalf("write env file: %v", err)
 	}
 	if err := writer.RemovePath(context.Background(), "environments/pr-2", "delete"); err != nil {
@@ -105,7 +105,7 @@ func TestRepositoryWriterClonesWritesSubdirAndPushes(t *testing.T) {
 	remote := filepath.Join(t.TempDir(), "remote.git")
 	run(t, "", "git", "init", "--bare", remote)
 	seed := initRepo(t)
-	if err := os.WriteFile(filepath.Join(seed, "README.md"), []byte("seed\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(seed, "README.md"), []byte("seed\n"), 0o600); err != nil {
 		t.Fatalf("write seed: %v", err)
 	}
 	run(t, seed, "git", "add", ".")
@@ -141,7 +141,7 @@ func TestRepositoryWriterClonesWritesSubdirAndPushes(t *testing.T) {
 	if subject := strings.TrimSpace(output(t, verify, "git", "log", "-1", "--pretty=%s")); !strings.Contains(subject, "pr-123") {
 		t.Fatalf("expected commit message to contain PR id, got %q", subject)
 	}
-	content, err := os.ReadFile(filepath.Join(verify, "clusters/dev/feature-envs/checkout/pr-123/namespace.yaml"))
+	content, err := os.ReadFile(filepath.Join(verify, "clusters/dev/feature-envs/checkout/pr-123/namespace.yaml")) //nolint:gosec
 	if err != nil {
 		t.Fatalf("read pushed manifest: %v", err)
 	}
@@ -154,7 +154,7 @@ func TestRepositoryWriterBranchStrategyPushesEnvironmentBranch(t *testing.T) {
 	remote := filepath.Join(t.TempDir(), "remote.git")
 	run(t, "", "git", "init", "--bare", remote)
 	seed := initRepo(t)
-	if err := os.WriteFile(filepath.Join(seed, "README.md"), []byte("seed\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(seed, "README.md"), []byte("seed\n"), 0o600); err != nil {
 		t.Fatalf("write seed: %v", err)
 	}
 	run(t, seed, "git", "add", ".")
@@ -200,7 +200,7 @@ func TestRepositoryWriterPullRequestStrategyCreatesProposal(t *testing.T) {
 	run(t, "", "git", "init", "--bare", remote)
 
 	seed := initRepo(t)
-	if err := os.WriteFile(filepath.Join(seed, "README.md"), []byte("seed\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(seed, "README.md"), []byte("seed\n"), 0o600); err != nil {
 		t.Fatalf("write seed: %v", err)
 	}
 	run(t, seed, "git", "add", ".")

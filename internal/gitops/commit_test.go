@@ -12,7 +12,7 @@ import (
 
 func TestCommitServiceCommitsChangesIdempotently(t *testing.T) {
 	repo := initRepo(t)
-	if err := os.WriteFile(filepath.Join(repo, "manifest.yaml"), []byte("kind: Namespace\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(repo, "manifest.yaml"), []byte("kind: Namespace\n"), 0o600); err != nil {
 		t.Fatalf("write manifest: %v", err)
 	}
 
@@ -43,7 +43,7 @@ func TestCommitServicePushesConfiguredBranch(t *testing.T) {
 
 	repo := initRepo(t)
 	run(t, repo, "git", "remote", "add", "origin", remote)
-	if err := os.WriteFile(filepath.Join(repo, "manifest.yaml"), []byte("kind: Namespace\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(repo, "manifest.yaml"), []byte("kind: Namespace\n"), 0o600); err != nil {
 		t.Fatalf("write manifest: %v", err)
 	}
 
@@ -67,7 +67,7 @@ func TestCommitServicePushConflictReturnsConflictError(t *testing.T) {
 	run(t, "", "git", "init", "--bare", remote)
 
 	seed := initRepo(t)
-	if err := os.WriteFile(filepath.Join(seed, "README.md"), []byte("seed\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(seed, "README.md"), []byte("seed\n"), 0o600); err != nil {
 		t.Fatalf("write seed: %v", err)
 	}
 	run(t, seed, "git", "add", "README.md")
@@ -80,14 +80,14 @@ func TestCommitServicePushConflictReturnsConflictError(t *testing.T) {
 	second := filepath.Join(t.TempDir(), "second")
 	run(t, "", "git", "clone", "-b", "main", remote, second)
 
-	if err := os.WriteFile(filepath.Join(first, "first.txt"), []byte("first\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(first, "first.txt"), []byte("first\n"), 0o600); err != nil {
 		t.Fatalf("write first: %v", err)
 	}
 	run(t, first, "git", "add", "first.txt")
 	run(t, first, "git", "-c", "user.name=first", "-c", "user.email=first@example.com", "commit", "-m", "first commit")
 	run(t, first, "git", "push", "origin", "main")
 
-	if err := os.WriteFile(filepath.Join(second, "second.txt"), []byte("second\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(second, "second.txt"), []byte("second\n"), 0o600); err != nil {
 		t.Fatalf("write second: %v", err)
 	}
 	service := NewCommitService(second, true, "origin", "main", "envpilot", "envpilot@example.com")
@@ -111,7 +111,7 @@ func initRepo(t *testing.T) string {
 
 func run(t *testing.T, dir string, name string, args ...string) {
 	t.Helper()
-	cmd := exec.Command(name, args...)
+	cmd := exec.Command(name, args...) //nolint:gosec
 	if dir != "" {
 		cmd.Dir = dir
 	}
@@ -123,7 +123,7 @@ func run(t *testing.T, dir string, name string, args ...string) {
 
 func output(t *testing.T, dir string, name string, args ...string) string {
 	t.Helper()
-	cmd := exec.Command(name, args...)
+	cmd := exec.Command(name, args...) //nolint:gosec
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
