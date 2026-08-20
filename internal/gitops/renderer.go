@@ -8,7 +8,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/envpilot/contracts/domain"
+	"github.com/envplane/contracts/domain"
 	"gopkg.in/yaml.v3"
 )
 
@@ -344,7 +344,7 @@ func deploymentServices(environment domain.Environment) []domain.ServiceOverride
 }
 
 func NamespaceName(id string) string {
-	return "envpilot-pr-" + strings.Trim(strings.ToLower(id), "-")
+	return "envplane-pr-" + strings.Trim(strings.ToLower(id), "-")
 }
 
 func namespaceManifestName(environment domain.Environment) string {
@@ -702,10 +702,10 @@ metadata:
   name: {{ .Environment.ID }}.{{ .Environment.Product }}
   namespace: {{ .Options.FluxNamespace }}
   labels:
-    app.kubernetes.io/managed-by: envpilot
-    envpilot.io/project: {{ .Environment.Project }}
-    envpilot.io/product: {{ .Environment.Product }}
-    envpilot.io/mode: {{ .Environment.Mode }}
+    app.kubernetes.io/managed-by: envplane
+    envplane.io/project: {{ .Environment.Project }}
+    envplane.io/product: {{ .Environment.Product }}
+    envplane.io/mode: {{ .Environment.Mode }}
 spec:
   interval: 30m
   retryInterval: 2m
@@ -747,10 +747,10 @@ metadata:
   name: {{ .Environment.ID }}.{{ .Environment.Product }}
   namespace: {{ .Environment.Namespace }}
   labels:
-    app.kubernetes.io/managed-by: envpilot
-    envpilot.io/project: {{ .Environment.Project }}
-    envpilot.io/product: {{ .Environment.Product }}
-    envpilot.io/mode: {{ .Environment.Mode }}
+    app.kubernetes.io/managed-by: envplane
+    envplane.io/project: {{ .Environment.Project }}
+    envplane.io/product: {{ .Environment.Product }}
+    envplane.io/mode: {{ .Environment.Mode }}
 spec:
   interval: 30m
   timeout: 15m
@@ -786,8 +786,8 @@ metadata:
   name: {{ .Environment.ID }}-values
   namespace: {{ .Environment.Namespace }}
   labels:
-    app.kubernetes.io/managed-by: envpilot
-    envpilot.io/project: {{ .Environment.Project }}
+    app.kubernetes.io/managed-by: envplane
+    envplane.io/project: {{ .Environment.Project }}
 data:
 {{- range .Substitute }}
   {{ .Key }}: {{ .Value | quote }}
@@ -801,7 +801,7 @@ metadata:
   namespace: {{ $.Environment.Namespace }}
   labels:
     app.kubernetes.io/name: {{ .Name }}
-    app.kubernetes.io/managed-by: envpilot
+    app.kubernetes.io/managed-by: envplane
 spec:
   replicas: 1
   selector:
@@ -865,14 +865,14 @@ namespace: {{ .Environment.Namespace }}
 resources:
   - {{ .OverlayResourcePath }}
 configMapGenerator:
-  - name: envpilot-values
+  - name: envplane-values
     literals:
 {{- range .Substitute }}
       - {{ .Key }}={{ .Value }}
 {{- end }}
 commonLabels:
-  app.kubernetes.io/managed-by: envpilot
-  envpilot.io/environment-id: {{ .Environment.ID }}
+  app.kubernetes.io/managed-by: envplane
+  envplane.io/environment-id: {{ .Environment.ID }}
 patches:
   - target:
       kind: Ingress
@@ -920,19 +920,19 @@ kind: Namespace
 metadata:
   name: {{ .Name }}
   labels:
-    app.kubernetes.io/managed-by: envpilot
-    envpilot.io/environment-id: {{ .Environment.ID }}
-    envpilot.io/project: {{ .Environment.Project }}
-    envpilot.io/product: {{ .Environment.Product }}
+    app.kubernetes.io/managed-by: envplane
+    envplane.io/environment-id: {{ .Environment.ID }}
+    envplane.io/project: {{ .Environment.Project }}
+    envplane.io/product: {{ .Environment.Product }}
 ---
 apiVersion: v1
 kind: ResourceQuota
 metadata:
-  name: envpilot-preview-quota
+  name: envplane-preview-quota
   namespace: {{ .Name }}
   labels:
-    app.kubernetes.io/managed-by: envpilot
-    envpilot.io/environment-id: {{ .Environment.ID }}
+    app.kubernetes.io/managed-by: envplane
+    envplane.io/environment-id: {{ .Environment.ID }}
 spec:
   hard:
     requests.cpu: "2"
@@ -944,11 +944,11 @@ spec:
 apiVersion: v1
 kind: LimitRange
 metadata:
-  name: envpilot-preview-limits
+  name: envplane-preview-limits
   namespace: {{ .Name }}
   labels:
-    app.kubernetes.io/managed-by: envpilot
-    envpilot.io/environment-id: {{ .Environment.ID }}
+    app.kubernetes.io/managed-by: envplane
+    envplane.io/environment-id: {{ .Environment.ID }}
 spec:
   limits:
     - type: Container

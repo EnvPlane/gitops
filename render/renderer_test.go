@@ -3,8 +3,8 @@ package render_test
 import (
 	"testing"
 
-	"github.com/envpilot/contracts/domain"
-	"github.com/envpilot/gitops/render"
+	"github.com/envplane/contracts/domain"
+	"github.com/envplane/gitops/render"
 )
 
 func TestPublicRendererPreservesImageSupport(t *testing.T) {

@@ -1,9 +1,9 @@
-module github.com/envpilot/gitops
+module github.com/envplane/gitops
 
 go 1.25.13
 
 require (
-	github.com/envpilot/contracts v0.1.35
+	github.com/envplane/contracts v0.1.36
 	gopkg.in/yaml.v3 v3.0.1
 )
 

@@ -33,7 +33,7 @@ func TestPullRequestServiceCreatesGitHubPullRequest(t *testing.T) {
 		RepoURL:  "https://github.com/acme/gitops.git",
 		Title:    "EnvPlane pr-123",
 		Body:     "body",
-		Head:     "envpilot/pr-123",
+		Head:     "envplane/pr-123",
 		Base:     "main",
 	})
 	if err != nil {
@@ -45,7 +45,7 @@ func TestPullRequestServiceCreatesGitHubPullRequest(t *testing.T) {
 	if gotAuth != "Bearer token" {
 		t.Fatalf("auth = %q", gotAuth)
 	}
-	if gotPayload["head"] != "envpilot/pr-123" || gotPayload["base"] != "main" {
+	if gotPayload["head"] != "envplane/pr-123" || gotPayload["base"] != "main" {
 		t.Fatalf("payload = %#v", gotPayload)
 	}
 	if result.URL != "https://github.com/acme/gitops/pull/7" || result.Number != "7" {

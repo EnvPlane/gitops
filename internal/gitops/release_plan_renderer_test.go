@@ -1,7 +1,7 @@
 package gitops
 
 import (
-	"github.com/envpilot/contracts/domain"
+	"github.com/envplane/contracts/domain"
 	"testing"
 )
 

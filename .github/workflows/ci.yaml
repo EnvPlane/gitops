@@ -13,12 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Set up module Go toolchain
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
       - name: Ensure Go toolchain
         run: |
           GO_VERSION_FILE=go.mod \
           ./scripts/ensure-go.sh
-      - name: Select module Go toolchain
-        run: echo "GOTOOLCHAIN=go$(awk '/^go[[:space:]]/ {print $2; exit}' go.mod)" >> "$GITHUB_ENV"
+      - name: Keep CI on the module Go toolchain
+        run: echo "GOTOOLCHAIN=local" >> "$GITHUB_ENV"
       - name: Cache Go modules and build cache
         uses: actions/cache@v4
         with:
@@ -30,13 +34,20 @@ jobs:
             gitops-go-cache-${{ runner.os }}-
       - name: Use published contracts module
         run: |
-          go mod edit -dropreplace=github.com/envpilot/contracts
+          go mod edit -dropreplace=github.com/envplane/contracts
           go mod tidy
       - name: Scan Go dependencies
         uses: golang/govulncheck-action@v1
         with:
           go-package: ./...
           repo-checkout: false
+      # govulncheck installs its own current Go runtime. Restore the module
+      # toolchain before compilation and static analysis so golangci-lint sees
+      # the same language version as the repository.
+      - name: Restore module Go toolchain
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
       - name: Enforce public module boundary
         run: |
           test -d render
