@@ -2,8 +2,8 @@
 package render
 
 import (
-	"github.com/envpilot/contracts/domain"
-	internal "github.com/envpilot/gitops/internal/gitops"
+	"github.com/envplane/contracts/domain"
+	internal "github.com/envplane/gitops/internal/gitops"
 )
 
 type FluxOptions = internal.FluxOptions

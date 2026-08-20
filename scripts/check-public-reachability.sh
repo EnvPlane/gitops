@@ -10,7 +10,7 @@ status=0
 for directory in internal/*; do
 	[[ -d "$directory" ]] || continue
 	find "$directory" -name '*.go' -type f -print -quit | rg -q '.' || continue
-	package="github.com/envpilot/gitops/$directory"
+	package="github.com/envplane/gitops/$directory"
 	if ! rg -Fq "$package" "$deps"; then
 		echo "public gitops packages do not reach $package" >&2
 		status=1

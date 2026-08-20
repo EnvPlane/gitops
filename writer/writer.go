@@ -1,7 +1,7 @@
 // Package writer exposes the canonical GitOps filesystem and git writers.
 package writer
 
-import internal "github.com/envpilot/gitops/internal/gitops"
+import internal "github.com/envplane/gitops/internal/gitops"
 
 type Writer = internal.Writer
 type FileWriter = internal.FileWriter

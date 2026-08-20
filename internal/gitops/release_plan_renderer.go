@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/envpilot/contracts/domain"
+	"github.com/envplane/contracts/domain"
 	"gopkg.in/yaml.v3"
 )
 
