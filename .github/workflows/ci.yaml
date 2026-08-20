@@ -41,6 +41,13 @@ jobs:
         with:
           go-package: ./...
           repo-checkout: false
+      # govulncheck installs its own current Go runtime. Restore the module
+      # toolchain before compilation and static analysis so golangci-lint sees
+      # the same language version as the repository.
+      - name: Restore module Go toolchain
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
       - name: Enforce public module boundary
         run: |
           test -d render
