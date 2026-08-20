@@ -13,12 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Set up module Go toolchain
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
       - name: Ensure Go toolchain
         run: |
           GO_VERSION_FILE=go.mod \
           ./scripts/ensure-go.sh
-      - name: Select module Go toolchain
-        run: echo "GOTOOLCHAIN=go$(awk '/^go[[:space:]]/ {print $2; exit}' go.mod)" >> "$GITHUB_ENV"
+      - name: Keep CI on the module Go toolchain
+        run: echo "GOTOOLCHAIN=local" >> "$GITHUB_ENV"
       - name: Cache Go modules and build cache
         uses: actions/cache@v4
         with:
