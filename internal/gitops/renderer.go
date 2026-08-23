@@ -64,6 +64,10 @@ func (d renderData) SourceRefName() string {
 	return d.Options.SourceRefName
 }
 
+func (d renderData) SourceRefNamespace() string {
+	return strings.TrimSpace(d.Environment.GitOps.SourceRefNamespace)
+}
+
 func (d renderData) HealthCheckName() string {
 	if d.Environment.GitOps.HealthCheckName != "" {
 		return d.Environment.GitOps.HealthCheckName
@@ -718,6 +722,9 @@ spec:
   sourceRef:
     kind: GitRepository
     name: {{ .SourceRefName }}
+{{- if .SourceRefNamespace }}
+    namespace: {{ .SourceRefNamespace }}
+{{- end }}
   path: {{ .AppPath }}
 {{- if .TargetNamespaceEnabled }}
   targetNamespace: {{ .TargetNamespace }}
@@ -762,6 +769,9 @@ spec:
       sourceRef:
         kind: GitRepository
         name: {{ .SourceRefName }}
+{{- if .SourceRefNamespace }}
+        namespace: {{ .SourceRefNamespace }}
+{{- end }}
         namespace: {{ .Options.FluxNamespace }}
 {{- with .ValuesFiles }}
   valuesFiles:

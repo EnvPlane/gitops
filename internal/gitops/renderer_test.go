@@ -330,6 +330,24 @@ func TestFluxRendererGeneratesHelmReleaseManifestSet(t *testing.T) {
 	assertContains(t, byPath["feature-envs/checkout/pr-42/kustomization.yaml"], "- helm-release.yaml")
 }
 
+func TestFluxRendererPreservesNamespacedSourceRef(t *testing.T) {
+	renderer := NewFluxRenderer(FluxOptions{FluxNamespace: "flux-system", SourceRefName: "apps"})
+	manifests, err := renderer.RenderManifestSet(domain.Environment{
+		ID: "pr-namespace-source", Project: "cms", Product: "generic", Namespace: "envplane-pr-namespace-source",
+		GitOps: domain.GitOpsTarget{SourceRefName: "envplane-gitops", SourceRefNamespace: "platform"},
+	})
+	if err != nil {
+		t.Fatalf("render manifest set: %v", err)
+	}
+	for _, manifest := range manifests {
+		if manifest.Kind == "FluxKustomization" {
+			text := string(manifest.Content)
+			assertContains(t, text, "name: envplane-gitops")
+			assertContains(t, text, "namespace: platform")
+		}
+	}
+}
+
 func TestFluxRendererPassesImageTagValuesToHelmTemplate(t *testing.T) {
 	renderer := NewFluxRenderer(FluxOptions{
 		SourceRefName: "apps",
