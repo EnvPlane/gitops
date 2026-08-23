@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up module Go toolchain
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
       - name: Ensure Go toolchain
@@ -24,7 +24,7 @@ jobs:
       - name: Keep CI on the module Go toolchain
         run: echo "GOTOOLCHAIN=local" >> "$GITHUB_ENV"
       - name: Cache Go modules and build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/go/pkg/mod
@@ -45,7 +45,7 @@ jobs:
       # toolchain before compilation and static analysis so golangci-lint sees
       # the same language version as the repository.
       - name: Restore module Go toolchain
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
       - name: Enforce public module boundary

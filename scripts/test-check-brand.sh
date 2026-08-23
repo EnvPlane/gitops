@@ -6,9 +6,14 @@ check="$repo_root/scripts/check-brand.sh"
 fixture_dir="$(mktemp -d)"
 trap 'rm -rf "$fixture_dir"' EXIT
 
+
 git -C "$fixture_dir" init -q
 git -C "$fixture_dir" config user.email test@example.invalid
 git -C "$fixture_dir" config user.name brand-test
+
+printf '%s\n' 'EnvPlane' 'ENVPLANE_API_TOKEN' 'envplane.io/environment-id' > "$fixture_dir/allowed.txt"
+"$check" "$fixture_dir/allowed.txt"
+
 
 printf '%s\n' 'ENVPLANE_API_TOKEN' 'envplane.io/environment-id' 'github.com/envplane/contracts' > "$fixture_dir/allowed.md"
 git -C "$fixture_dir" add allowed.md
