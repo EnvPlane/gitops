@@ -91,6 +91,20 @@ func TestFluxRendererUsesObservedFeatureEnvironmentPattern(t *testing.T) {
 	assertContains(t, yaml, "frontendRouteTarget: base")
 }
 
+func TestFluxRendererOmitsDependencyWhenUnset(t *testing.T) {
+	renderer := NewFluxRenderer(FluxOptions{ProductBasePath: "common/apps"})
+	content, err := renderer.Render(domain.Environment{
+		ID: "no-dependency", Project: "demo", Product: "generic", Namespace: "no-dependency",
+		Mode: domain.ModeFull,
+	})
+	if err != nil {
+		t.Fatalf("render failed: %v", err)
+	}
+	if strings.Contains(string(content), "dependsOn:") {
+		t.Fatalf("rendered unset dependency: %s", content)
+	}
+}
+
 func TestFluxRendererHybridIngressRoutesOverridesToPreviewAndOthersToBase(t *testing.T) {
 	renderer := NewFluxRenderer(FluxOptions{
 		FluxNamespace:   "flux-system",

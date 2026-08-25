@@ -721,8 +721,10 @@ spec:
   timeout: 15m
   wait: true
   prune: true
+{{- if .Options.DependsOnName }}
   dependsOn:
     - name: {{ .Options.DependsOnName }}
+{{- end }}
   serviceAccountName: kustomize-controller
   sourceRef:
     kind: GitRepository
