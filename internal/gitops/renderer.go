@@ -442,6 +442,11 @@ func buildSubstitutions(environment domain.Environment, options FluxOptions) []s
 		"apiCursusTag":       "latest",
 		"apiIrisTag":         "latest",
 	}
+	for key, value := range values {
+		if value == "" {
+			values[key] = "''"
+		}
+	}
 
 	for _, service := range environment.Services {
 		key := serviceTagKey(service.Name)

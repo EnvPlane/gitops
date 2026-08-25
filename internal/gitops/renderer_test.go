@@ -168,10 +168,10 @@ func TestFluxRendererFullModeDeploysAllServicesLocally(t *testing.T) {
 
 	yaml := string(content)
 	assertContains(t, yaml, "deployServices: backend,frontend")
-	assertContains(t, yaml, "baseRoutedServices: ")
+	assertContains(t, yaml, "baseRoutedServices: ''")
 	assertContains(t, yaml, "routingStrategy: full-ingress")
 	assertContains(t, yaml, "overrideRoutes: backend=kan-1803-cms,frontend=kan-1803-cms")
-	assertContains(t, yaml, "fallbackRoutes: ")
+	assertContains(t, yaml, "fallbackRoutes: ''")
 	assertContains(t, yaml, "backendDeployEnabled: 'true'")
 	assertContains(t, yaml, "backendRouteNamespace: kan-1803-cms")
 	assertContains(t, yaml, "backendRouteTarget: override")
