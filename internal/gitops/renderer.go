@@ -45,8 +45,9 @@ func NewFluxRenderer(options FluxOptions) FluxRenderer {
 }
 
 type substitute struct {
-	Key   string
-	Value string
+	Key       string
+	Value     string
+	FluxValue string
 }
 
 type renderData struct {
@@ -477,12 +478,27 @@ func buildSubstitutions(environment domain.Environment, options FluxOptions) []s
 
 	items := make([]substitute, 0, len(values))
 	for key, value := range values {
-		items = append(items, substitute{Key: key, Value: value})
+		items = append(items, substitute{Key: key, Value: value, FluxValue: fluxSubstitutionValue(value)})
 	}
 	sort.Slice(items, func(i, j int) bool {
 		return items[i].Key < items[j].Key
 	})
 	return items
+}
+
+// fluxSubstitutionValue preserves ordinary human-readable substitutions while
+// quoting YAML scalars that Flux would otherwise decode as booleans, numbers or
+// null. Flux Kustomization postBuild.substitute is map[string]string, so a
+// bare override such as artifactPending: true is rejected by the API.
+func fluxSubstitutionValue(value string) string {
+	var parsed any
+	if err := yaml.Unmarshal([]byte(value), &parsed); err != nil {
+		return strconv.Quote(value)
+	}
+	if _, ok := parsed.(string); ok {
+		return value
+	}
+	return strconv.Quote(value)
 }
 
 type servicePlan struct {
@@ -750,7 +766,7 @@ spec:
         optional: true
     substitute:
 {{- range .Substitute }}
-      {{ .Key }}: {{ .Value }}
+      {{ .Key }}: {{ .FluxValue }}
 {{- end }}
 `))
 

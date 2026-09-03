@@ -105,6 +105,20 @@ func TestFluxRendererOmitsDependencyWhenUnset(t *testing.T) {
 	}
 }
 
+func TestFluxRendererQuotesTypedPostBuildSubstitutions(t *testing.T) {
+	renderer := NewFluxRenderer(FluxOptions{ProductBasePath: "common/apps"})
+	content, err := renderer.Render(domain.Environment{
+		ID: "artifact-pending", Project: "checkout", Product: "generic", Namespace: "artifact-pending",
+		Overrides: map[string]string{"artifactPending": "true", "attempt": "12"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	yaml := string(content)
+	assertContains(t, yaml, `artifactPending: "true"`)
+	assertContains(t, yaml, `attempt: "12"`)
+}
+
 func TestFluxRendererHybridIngressRoutesOverridesToPreviewAndOthersToBase(t *testing.T) {
 	renderer := NewFluxRenderer(FluxOptions{
 		FluxNamespace:   "flux-system",
