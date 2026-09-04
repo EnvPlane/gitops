@@ -470,7 +470,7 @@ func buildSubstitutions(environment domain.Environment, options FluxOptions) []s
 	}
 	for key, value := range environment.Overrides {
 		key = strings.TrimSpace(key)
-		if key == "" {
+		if !validFluxSubstitutionKey(key) {
 			continue
 		}
 		values[key] = strings.TrimSpace(value)
@@ -484,6 +484,24 @@ func buildSubstitutions(environment domain.Environment, options FluxOptions) []s
 		return items[i].Key < items[j].Key
 	})
 	return items
+}
+
+// Flux accepts shell-style identifiers only in postBuild.substitute. Values
+// override paths (for example service.type) are valid application input, but
+// cannot be emitted as Flux variables and would make reconciliation fail.
+func validFluxSubstitutionKey(key string) bool {
+	if key == "" {
+		return false
+	}
+	for index, character := range key {
+		isLetter := character >= 'a' && character <= 'z' || character >= 'A' && character <= 'Z'
+		isDigit := character >= '0' && character <= '9'
+		if character == '_' || isLetter || (index > 0 && isDigit) {
+			continue
+		}
+		return false
+	}
+	return true
 }
 
 // fluxSubstitutionValue preserves ordinary human-readable substitutions while

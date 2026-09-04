@@ -119,6 +119,20 @@ func TestFluxRendererQuotesTypedPostBuildSubstitutions(t *testing.T) {
 	assertContains(t, yaml, `attempt: "12"`)
 }
 
+func TestFluxRendererOmitsInvalidFluxSubstitutionKeys(t *testing.T) {
+	renderer := NewFluxRenderer(FluxOptions{ProductBasePath: "common/apps"})
+	content, err := renderer.Render(domain.Environment{
+		ID: "safe-substitutions", Project: "checkout", Product: "generic", Namespace: "safe-substitutions",
+		Overrides: map[string]string{"service.type": "ClusterIP", "imageTag": "stable"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	yaml := string(content)
+	assertNotContains(t, yaml, "service.type:")
+	assertContains(t, yaml, "imageTag: stable")
+}
+
 func TestFluxRendererHybridIngressRoutesOverridesToPreviewAndOthersToBase(t *testing.T) {
 	renderer := NewFluxRenderer(FluxOptions{
 		FluxNamespace:   "flux-system",
