@@ -738,17 +738,19 @@ func serviceTagKey(name string) string {
 	}
 }
 
-var fluxTemplate = template.Must(template.New("flux").Parse(`---
+var fluxTemplate = template.Must(template.New("flux").Funcs(template.FuncMap{
+	"yamlScalar": quoteYAMLScalar,
+}).Parse(`---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: {{ .Environment.ID }}.{{ .Environment.Product }}
-  namespace: {{ .Options.FluxNamespace }}
+  name: {{ printf "%s.%s" .Environment.ID .Environment.Product | yamlScalar }}
+  namespace: {{ .Options.FluxNamespace | yamlScalar }}
   labels:
     app.kubernetes.io/managed-by: envplane
-    envplane.io/project: {{ .Environment.Project }}
-    envplane.io/product: {{ .Environment.Product }}
-    envplane.io/mode: {{ .Environment.Mode }}
+    envplane.io/project: {{ .Environment.Project | yamlScalar }}
+    envplane.io/product: {{ .Environment.Product | yamlScalar }}
+    envplane.io/mode: {{ .Environment.Mode | yamlScalar }}
 spec:
   interval: 30m
   retryInterval: 2m
@@ -757,25 +759,25 @@ spec:
   prune: true
 {{- if .Options.DependsOnName }}
   dependsOn:
-    - name: {{ .Options.DependsOnName }}
+    - name: {{ .Options.DependsOnName | yamlScalar }}
 {{- end }}
   serviceAccountName: kustomize-controller
   sourceRef:
     kind: GitRepository
-    name: {{ .SourceRefName }}
+    name: {{ .SourceRefName | yamlScalar }}
 {{- if .SourceRefNamespace }}
-    namespace: {{ .SourceRefNamespace }}
+    namespace: {{ .SourceRefNamespace | yamlScalar }}
 {{- end }}
-  path: {{ .AppPath }}
+  path: {{ .AppPath | yamlScalar }}
 {{- if .TargetNamespaceEnabled }}
-  targetNamespace: {{ .TargetNamespace }}
+  targetNamespace: {{ .TargetNamespace | yamlScalar }}
 {{- end }}
 {{- if .HealthCheckEnabled }}
   healthChecks:
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
-      name: {{ .HealthCheckName }}
-      namespace: {{ .Environment.Namespace }}
+      name: {{ .HealthCheckName | yamlScalar }}
+      namespace: {{ .Environment.Namespace | yamlScalar }}
 {{- end }}
   postBuild:
     substituteFrom:
@@ -784,7 +786,7 @@ spec:
         optional: true
     substitute:
 {{- range .Substitute }}
-      {{ .Key }}: {{ .FluxValue }}
+      {{ .Key | yamlScalar }}: {{ .FluxValue }}
 {{- end }}
 `))
 
@@ -958,6 +960,27 @@ func serviceImageTag(value string) string {
 
 func strconvQuote(value string) string {
 	return strconv.Quote(value)
+}
+
+// quoteYAMLScalar preserves readable plain scalars while quoting every value
+// that could be interpreted as another YAML type or introduce structure.
+func quoteYAMLScalar(raw any) string {
+	value := fmt.Sprint(raw)
+	if value == "" || strings.TrimSpace(value) != value || strings.ContainsAny(value, "\r\n{}[]&,*!|>'\"%@`") ||
+		strings.Contains(value, ": ") || strings.Contains(value, " #") || strings.HasSuffix(value, ":") {
+		return strconv.Quote(value)
+	}
+	switch strings.ToLower(value) {
+	case "null", "~", "true", "false", "yes", "no", "on", "off":
+		return strconv.Quote(value)
+	}
+	var parsed any
+	if err := yaml.Unmarshal([]byte(value), &parsed); err == nil {
+		if _, isString := parsed.(string); !isString {
+			return strconv.Quote(value)
+		}
+	}
+	return value
 }
 
 type namespaceData struct {

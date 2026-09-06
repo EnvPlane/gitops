@@ -105,6 +105,54 @@ func TestFluxRendererOmitsDependencyWhenUnset(t *testing.T) {
 	}
 }
 
+func TestFluxRendererQuotesUntrustedYAMLScalars(t *testing.T) {
+	renderer := NewFluxRenderer(FluxOptions{
+		FluxNamespace:   "flux-system",
+		SourceRefName:   "apps",
+		ProductBasePath: "common/apps",
+	})
+	content, err := renderer.Render(domain.Environment{
+		ID:        "pr-quote",
+		Project:   "checkout",
+		Product:   "payments",
+		Namespace: "envplane-pr-quote",
+		GitOps: domain.GitOpsTarget{
+			Path:            "apps/foo\npatches:\n  - patch: |\n      injected: true",
+			SourceRefName:   "apps: {evil: true}",
+			TargetNamespace: "tenant: bad",
+		},
+		Overrides: map[string]string{
+			"numeric":  "12",
+			"norway":   "yes",
+			"injected": "value: {evil: true}\nnext: line",
+		},
+	})
+	if err != nil {
+		t.Fatalf("render failed: %v", err)
+	}
+
+	var document map[string]any
+	if err := yaml.Unmarshal(content, &document); err != nil {
+		t.Fatalf("rendered Flux manifest is invalid YAML: %v\n%s", err, content)
+	}
+	spec, ok := document["spec"].(map[string]any)
+	if !ok {
+		t.Fatalf("rendered Flux manifest has no spec: %#v", document)
+	}
+	if got := spec["path"]; got != "apps/foo\npatches:\n  - patch: |\n      injected: true" {
+		t.Fatalf("path was not preserved as one scalar: %#v", got)
+	}
+	if got := spec["targetNamespace"]; got != "tenant: bad" {
+		t.Fatalf("target namespace was not preserved as one scalar: %#v", got)
+	}
+	substitute := spec["postBuild"].(map[string]any)["substitute"].(map[string]any)
+	for key, want := range map[string]string{"numeric": "12", "norway": "yes", "injected": "value: {evil: true}\nnext: line"} {
+		if got := substitute[key]; got != want {
+			t.Fatalf("substitution %q = %#v, want %q", key, got, want)
+		}
+	}
+}
+
 func TestFluxRendererQuotesTypedPostBuildSubstitutions(t *testing.T) {
 	renderer := NewFluxRenderer(FluxOptions{ProductBasePath: "common/apps"})
 	content, err := renderer.Render(domain.Environment{
