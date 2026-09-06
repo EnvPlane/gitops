@@ -30,6 +30,60 @@ func TestFileWriterRemovePathDeletesEnvironmentDirectory(t *testing.T) {
 	}
 }
 
+func TestRepositoryWriterManagesRootKustomizationResources(t *testing.T) {
+	root := t.TempDir()
+	writer := &RepositoryWriter{
+		target: RepositoryTarget{Workspace: root},
+		writer: NewFileWriter(root, false, "", ""),
+	}
+	writer.once.Do(func() {})
+
+	if err := writer.EnsureRootKustomizationResource(context.Background(), "environments", "create"); err != nil {
+		t.Fatalf("ensure resource: %v", err)
+	}
+	if err := writer.EnsureRootKustomizationResource(context.Background(), "environments", "create"); err != nil {
+		t.Fatalf("ensure duplicate resource: %v", err)
+	}
+	content, err := os.ReadFile(filepath.Join(root, "kustomization.yaml"))
+	if err != nil {
+		t.Fatalf("read root kustomization: %v", err)
+	}
+	if !strings.Contains(string(content), "resources: [environments]") {
+		t.Fatalf("expected one resource, got %q", content)
+	}
+
+	if err := writer.RemoveRootKustomizationResource(context.Background(), "environments", "delete"); err != nil {
+		t.Fatalf("remove resource: %v", err)
+	}
+	content, err = os.ReadFile(filepath.Join(root, "kustomization.yaml"))
+	if err != nil {
+		t.Fatalf("read updated root kustomization: %v", err)
+	}
+	if strings.Contains(string(content), "environments") {
+		t.Fatalf("resource was not removed: %q", content)
+	}
+}
+
+func TestRepositoryWriterValidatePath(t *testing.T) {
+	root := t.TempDir()
+	writeDir := filepath.Join(root, "clusters", "dev")
+	if err := os.MkdirAll(filepath.Join(writeDir, "apps"), 0o750); err != nil {
+		t.Fatalf("mkdir app path: %v", err)
+	}
+	writer := &RepositoryWriter{
+		target: RepositoryTarget{Workspace: root, Path: "clusters/dev"},
+		writer: NewFileWriter(writeDir, false, "", ""),
+	}
+	writer.once.Do(func() {})
+
+	if err := writer.ValidatePath(context.Background(), "clusters/dev/apps"); err != nil {
+		t.Fatalf("validate existing path: %v", err)
+	}
+	if err := writer.ValidatePath(context.Background(), "clusters/dev/missing"); err == nil {
+		t.Fatal("expected missing path to be rejected")
+	}
+}
+
 func newRepositoryWriterForRemovePathTests(t *testing.T) (*RepositoryWriter, string, string) {
 	t.Helper()
 	repoRoot := t.TempDir()

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -31,6 +32,112 @@ type RepositoryTarget struct {
 	PullRequestTitle  string
 	PullRequestBody   string
 	PullRequestAPI    string
+}
+
+// EnsureRootKustomizationResource adds a repository-relative resource to the
+// root Kustomization if it is not already present.
+func (w *RepositoryWriter) EnsureRootKustomizationResource(ctx context.Context, resource string, _ string) error {
+	if err := w.ensure(ctx); err != nil {
+		return err
+	}
+	resource = strings.Trim(strings.TrimSpace(resource), "/")
+	if resource == "" || filepath.IsAbs(resource) || strings.Contains(resource, "..") {
+		return fmt.Errorf("invalid root kustomization resource %q", resource)
+	}
+	path := filepath.Join(w.writer.dir, "kustomization.yaml")
+	content, err := os.ReadFile(path) // #nosec G304 -- path is constrained to the repository root above.
+	if err != nil {
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("read root kustomization: %w", err)
+		}
+		content = []byte("apiVersion: kustomize.config.k8s.io/v1beta1\nkind: Kustomization\nresources: []\n")
+	}
+	var document yaml.Node
+	if err := yaml.Unmarshal(content, &document); err != nil {
+		return fmt.Errorf("parse root kustomization: %w", err)
+	}
+	if len(document.Content) == 0 || document.Content[0].Kind != yaml.MappingNode {
+		return fmt.Errorf("root kustomization must be a mapping")
+	}
+	root := document.Content[0]
+	resources := repositoryMappingValue(root, "resources")
+	if resources == nil {
+		root.Content = append(root.Content, &yaml.Node{Kind: yaml.ScalarNode, Value: "resources"}, &yaml.Node{Kind: yaml.SequenceNode})
+		resources = root.Content[len(root.Content)-1]
+	}
+	if resources.Kind != yaml.SequenceNode {
+		return fmt.Errorf("root kustomization resources must be a sequence")
+	}
+	for _, item := range resources.Content {
+		if item.Kind == yaml.ScalarNode && strings.Trim(strings.TrimSpace(item.Value), "/") == resource {
+			return nil
+		}
+	}
+	resources.Content = append(resources.Content, &yaml.Node{Kind: yaml.ScalarNode, Value: resource})
+	encoded, err := yaml.Marshal(&document)
+	if err != nil {
+		return fmt.Errorf("encode root kustomization: %w", err)
+	}
+	return os.WriteFile(path, encoded, 0o600) // #nosec G306 -- GitOps manifests are private workspace files.
+}
+
+// RemoveRootKustomizationResource removes a repository-relative resource from
+// the root Kustomization before the directory itself is removed.
+func (w *RepositoryWriter) RemoveRootKustomizationResource(ctx context.Context, resource string, _ string) error {
+	if err := w.ensure(ctx); err != nil {
+		return err
+	}
+	resource = strings.Trim(strings.TrimSpace(resource), "/")
+	if resource == "" || filepath.IsAbs(resource) || strings.Contains(resource, "..") {
+		return fmt.Errorf("invalid root kustomization resource %q", resource)
+	}
+	path := filepath.Join(w.writer.dir, "kustomization.yaml")
+	content, err := os.ReadFile(path) // #nosec G304 -- path is constrained to the repository root above.
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("read root kustomization: %w", err)
+	}
+	var document yaml.Node
+	if err := yaml.Unmarshal(content, &document); err != nil {
+		return fmt.Errorf("parse root kustomization: %w", err)
+	}
+	if len(document.Content) == 0 || document.Content[0].Kind != yaml.MappingNode {
+		return fmt.Errorf("root kustomization must be a mapping")
+	}
+	resources := repositoryMappingValue(document.Content[0], "resources")
+	if resources == nil {
+		return nil
+	}
+	if resources.Kind != yaml.SequenceNode {
+		return fmt.Errorf("root kustomization resources must be a sequence")
+	}
+	filtered := resources.Content[:0]
+	for _, item := range resources.Content {
+		if item.Kind == yaml.ScalarNode && strings.Trim(strings.TrimSpace(item.Value), "/") == resource {
+			continue
+		}
+		filtered = append(filtered, item)
+	}
+	if len(filtered) == len(resources.Content) {
+		return nil
+	}
+	resources.Content = filtered
+	encoded, err := yaml.Marshal(&document)
+	if err != nil {
+		return fmt.Errorf("encode root kustomization: %w", err)
+	}
+	return os.WriteFile(path, encoded, 0o600) // #nosec G306 -- GitOps manifests are private workspace files.
+}
+
+func repositoryMappingValue(mapping *yaml.Node, key string) *yaml.Node {
+	for index := 0; index+1 < len(mapping.Content); index += 2 {
+		if mapping.Content[index].Value == key {
+			return mapping.Content[index+1]
+		}
+	}
+	return nil
 }
 
 type RepositoryWriter struct {
@@ -73,6 +180,31 @@ func (w *RepositoryWriter) WriteManifest(ctx context.Context, filename string, c
 		return "", err
 	}
 	return w.writer.WriteManifest(ctx, filename, content, message)
+}
+
+// ValidatePath verifies that a configured GitOps application path exists and is a directory.
+func (w *RepositoryWriter) ValidatePath(ctx context.Context, relative string) error {
+	if err := w.ensure(ctx); err != nil {
+		return err
+	}
+	repositoryPath := strings.Trim(strings.TrimSpace(w.target.Path), "/")
+	relative = strings.Trim(strings.TrimSpace(relative), "/")
+	if repositoryPath != "" && (relative == repositoryPath || strings.HasPrefix(relative, repositoryPath+"/")) {
+		relative = strings.TrimPrefix(relative, repositoryPath)
+		relative = strings.TrimPrefix(relative, "/")
+	}
+	path, err := resolveInsideRoot(w.writer.dir, relative)
+	if err != nil {
+		return err
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("gitops application path %q is unavailable: %w", relative, err)
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("gitops application path %q is not a directory", relative)
+	}
+	return nil
 }
 
 func (w *RepositoryWriter) RemoveManifest(ctx context.Context, filename string, message string) error {
