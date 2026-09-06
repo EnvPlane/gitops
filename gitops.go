@@ -40,3 +40,7 @@ func NewGitWriter(dir string, commit bool, push bool, remote string, branch stri
 func NewRepositoryWriter(target RepositoryTarget) (*RepositoryWriter, error) {
 	return writer.NewRepositoryWriter(target)
 }
+
+func RepositoryWorkspace(root string, repositoryURL string, branch string) string {
+	return writer.RepositoryWorkspace(root, repositoryURL, branch)
+}
