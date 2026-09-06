@@ -153,6 +153,94 @@ func TestFluxRendererQuotesUntrustedYAMLScalars(t *testing.T) {
 	}
 }
 
+func TestFluxRendererKeepsUntrustedFieldsAsSingleYAMLScalars(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+	}{
+		{name: "newline and mapping", value: "apps/foo\npatches:\n  - patch: injected"},
+		{name: "colon", value: "tenant: production"},
+		{name: "flow mapping", value: "{evil: true}"},
+		{name: "quoted", value: `value "with" quotes`},
+		{name: "integer", value: "123"},
+		{name: "float", value: "1.0"},
+		{name: "legacy boolean", value: "yes"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			content, err := NewFluxRenderer(FluxOptions{
+				FluxNamespace:   "flux-system",
+				SourceRefName:   "apps",
+				ProductBasePath: "common/apps",
+			}).Render(domain.Environment{
+				ID:        "scalar-test",
+				Project:   test.value,
+				Product:   test.value,
+				Namespace: "scalar-test",
+				GitOps: domain.GitOpsTarget{
+					Path:            test.value,
+					SourceRefName:   "apps",
+					TargetNamespace: "tenant",
+				},
+				Overrides: map[string]string{"untrusted": test.value},
+			})
+			if err != nil {
+				t.Fatalf("render failed: %v", err)
+			}
+
+			var document map[string]any
+			if err := yaml.Unmarshal(content, &document); err != nil {
+				t.Fatalf("rendered YAML is invalid: %v\n%s", err, content)
+			}
+			metadata, ok := document["metadata"].(map[string]any)
+			if !ok {
+				t.Fatalf("metadata is not a mapping: %#v", document["metadata"])
+			}
+			labels, ok := metadata["labels"].(map[string]any)
+			if !ok {
+				t.Fatalf("labels are not a mapping: %#v", metadata["labels"])
+			}
+			if labels["envplane.io/project"] != test.value || labels["envplane.io/product"] != test.value {
+				t.Fatalf("metadata scalar values were not preserved: %#v", labels)
+			}
+
+			spec, ok := document["spec"].(map[string]any)
+			if !ok {
+				t.Fatalf("spec is not a mapping: %#v", document["spec"])
+			}
+			if spec["path"] != test.value {
+				t.Fatalf("path = %#v, want %q", spec["path"], test.value)
+			}
+			postBuild, ok := spec["postBuild"].(map[string]any)
+			if !ok {
+				t.Fatalf("postBuild is not a mapping: %#v", spec["postBuild"])
+			}
+			substitutions, ok := postBuild["substitute"].(map[string]any)
+			if !ok {
+				t.Fatalf("substitute is not a mapping: %#v", postBuild["substitute"])
+			}
+			if substitutions["untrusted"] != test.value {
+				t.Fatalf("substitution = %#v, want %q", substitutions["untrusted"], test.value)
+			}
+			for _, injectedKey := range []string{"patches", "next", "evil"} {
+				if _, exists := document[injectedKey]; exists {
+					t.Fatalf("unexpected top-level injected key %q", injectedKey)
+				}
+				if _, exists := spec[injectedKey]; exists {
+					t.Fatalf("unexpected spec injected key %q", injectedKey)
+				}
+				if _, exists := labels[injectedKey]; exists {
+					t.Fatalf("unexpected metadata injected key %q", injectedKey)
+				}
+				if _, exists := substitutions[injectedKey]; exists {
+					t.Fatalf("unexpected substitution injected key %q", injectedKey)
+				}
+			}
+		})
+	}
+}
+
 func TestFluxRendererQuotesTypedPostBuildSubstitutions(t *testing.T) {
 	renderer := NewFluxRenderer(FluxOptions{ProductBasePath: "common/apps"})
 	content, err := renderer.Render(domain.Environment{
