@@ -371,7 +371,7 @@ func validateRepositoryTarget(rawURL, path, branch, pushBranch string, allowLoca
 	parsed, err := url.Parse(rawURL)
 	isExplicitLocalURL := parsed.Scheme == "file" && parsed.Host == "" && filepath.IsAbs(parsed.Path)
 	if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "ssh" && !strings.HasPrefix(rawURL, "git@") && !(allowLocalRepository && filepath.IsAbs(rawURL)) && !isExplicitLocalURL) {
-		return fmt.Errorf("gitops repository url must use https, ssh, or scp syntax")
+		return fmt.Errorf("gitops repository url must use https, ssh, scp, or an explicit file URL")
 	}
 	if filepath.IsAbs(path) {
 		return fmt.Errorf("gitops repository path must be relative")
