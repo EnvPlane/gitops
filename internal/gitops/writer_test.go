@@ -30,6 +30,10 @@ func TestFileWriterRemovePathDeletesEnvironmentDirectory(t *testing.T) {
 	}
 }
 
+func newRepositoryWriterForTests(target RepositoryTarget) (*RepositoryWriter, error) {
+	return newRepositoryWriter(target, true)
+}
+
 func TestRepositoryWriterManagesRootKustomizationResources(t *testing.T) {
 	root := t.TempDir()
 	writer := &RepositoryWriter{
@@ -168,7 +172,7 @@ func TestRepositoryWriterClonesWritesSubdirAndPushes(t *testing.T) {
 	run(t, seed, "git", "push", "origin", "main")
 
 	workspace := filepath.Join(t.TempDir(), "worktree")
-	writer, err := NewRepositoryWriter(RepositoryTarget{
+	writer, err := newRepositoryWriterForTests(RepositoryTarget{
 		URL:         remote,
 		Branch:      "main",
 		Path:        "clusters/dev",
@@ -216,7 +220,7 @@ func TestRepositoryWriterBranchStrategyPushesEnvironmentBranch(t *testing.T) {
 	run(t, seed, "git", "remote", "add", "origin", remote)
 	run(t, seed, "git", "push", "origin", "main")
 
-	writer, err := NewRepositoryWriter(RepositoryTarget{
+	writer, err := newRepositoryWriterForTests(RepositoryTarget{
 		URL:            remote,
 		Branch:         "main",
 		BranchStrategy: "branch",
@@ -279,7 +283,7 @@ func TestRepositoryWriterPullRequestStrategyCreatesProposal(t *testing.T) {
 		}))
 	}
 
-	writer, err := NewRepositoryWriter(RepositoryTarget{
+	writer, err := newRepositoryWriterForTests(RepositoryTarget{
 		URL:              remote,
 		Provider:         "github",
 		Branch:           "main",

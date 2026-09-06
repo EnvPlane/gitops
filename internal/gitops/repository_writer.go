@@ -148,14 +148,15 @@ type RepositoryWriter struct {
 }
 
 func NewRepositoryWriter(target RepositoryTarget) (*RepositoryWriter, error) {
+	return newRepositoryWriter(target, false)
+}
+
+func newRepositoryWriter(target RepositoryTarget, allowLocalRepository bool) (*RepositoryWriter, error) {
 	target.URL = strings.TrimSpace(target.URL)
 	target.Provider = strings.ToLower(strings.TrimSpace(target.Provider))
 	target.Branch = strings.TrimSpace(target.Branch)
 	target.BranchStrategy = normalizeBranchStrategy(target.BranchStrategy)
 	target.Path = strings.Trim(strings.TrimSpace(target.Path), "/")
-	if err := validateRepositoryTarget(target.URL, target.Path); err != nil {
-		return nil, err
-	}
 	target.Workspace = strings.TrimSpace(target.Workspace)
 	if target.URL == "" {
 		return nil, fmt.Errorf("gitops repository url is required")
@@ -168,6 +169,9 @@ func NewRepositoryWriter(target RepositoryTarget) (*RepositoryWriter, error) {
 	}
 	if target.PushBranch == "" {
 		target.PushBranch = target.Branch
+	}
+	if err := validateRepositoryTarget(target.URL, target.Path, target.Branch, target.PushBranch, allowLocalRepository); err != nil {
+		return nil, err
 	}
 	if target.BranchStrategy == "pull-request" {
 		target.CreatePullRequest = true
@@ -340,10 +344,10 @@ func (w *RepositoryWriter) prepare(ctx context.Context) error {
 			}
 		}
 	} else {
-		if err := runGit(ctx, w.target.Workspace, "checkout", w.target.Branch); err != nil {
+		if err := runGit(ctx, w.target.Workspace, "checkout", "--no-guess", w.target.Branch); err != nil {
 			return err
 		}
-		if err := runGitWithSecret(ctx, w.target.Workspace, w.target.SecretValue, "pull", "--ff-only", "origin", w.target.Branch); err != nil {
+		if err := runGitWithSecret(ctx, w.target.Workspace, w.target.SecretValue, "pull", "--ff-only", "--", "origin", w.target.Branch); err != nil {
 			return err
 		}
 	}
@@ -356,15 +360,16 @@ func (w *RepositoryWriter) prepare(ctx context.Context) error {
 	return nil
 }
 
-func validateRepositoryTarget(rawURL, path string) error {
+func validateRepositoryTarget(rawURL, path, branch, pushBranch string, allowLocalRepository bool) error {
 	if strings.HasPrefix(strings.TrimSpace(rawURL), "-") {
 		return fmt.Errorf("gitops repository url must not start with a flag")
 	}
 	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(rawURL)), "ext::") {
 		return fmt.Errorf("gitops repository url uses a forbidden transport")
 	}
-	parsed, err := url.Parse(strings.TrimSpace(rawURL))
-	if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "ssh" && !strings.HasPrefix(rawURL, "git@") && !filepath.IsAbs(rawURL)) {
+	rawURL = strings.TrimSpace(rawURL)
+	parsed, err := url.Parse(rawURL)
+	if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "ssh" && !strings.HasPrefix(rawURL, "git@") && !(allowLocalRepository && filepath.IsAbs(rawURL))) {
 		return fmt.Errorf("gitops repository url must use https, ssh, or scp syntax")
 	}
 	if filepath.IsAbs(path) {
@@ -373,6 +378,11 @@ func validateRepositoryTarget(rawURL, path string) error {
 	for _, part := range strings.Split(filepath.ToSlash(path), "/") {
 		if part == ".." {
 			return fmt.Errorf("gitops repository path traversal is not allowed")
+		}
+	}
+	for name, value := range map[string]string{"branch": branch, "push branch": pushBranch} {
+		if strings.HasPrefix(value, "-") {
+			return fmt.Errorf("gitops %s must not start with a flag", name)
 		}
 	}
 	return nil

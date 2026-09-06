@@ -67,3 +67,29 @@ func TestRepositoryPathNormalizesHTTPSAndSSHURLs(t *testing.T) {
 		}
 	}
 }
+
+func TestNewRepositoryWriterRejectsUnsafeBranchesAndLocalURLs(t *testing.T) {
+	tests := []struct {
+		name       string
+		url        string
+		branch     string
+		pushBranch string
+	}{
+		{name: "branch flag", url: "https://github.com/acme/gitops.git", branch: "--upload-pack=/tmp/evil.sh"},
+		{name: "push branch flag", url: "https://github.com/acme/gitops.git", branch: "main", pushBranch: "--exec=/tmp/evil.sh"},
+		{name: "local repository path", url: "/tmp/gitops.git", branch: "main"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := NewRepositoryWriter(RepositoryTarget{
+				URL:        test.url,
+				Branch:     test.branch,
+				PushBranch: test.pushBranch,
+				Workspace:  t.TempDir(),
+			})
+			if err == nil {
+				t.Fatal("expected unsafe repository target to be rejected")
+			}
+		})
+	}
+}
