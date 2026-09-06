@@ -38,6 +38,8 @@ jobs:
           go mod tidy
       - name: Verify contracts pin is current
         run: ./scripts/check-contract-version.sh
+      - name: Verify isolated module build
+        run: GOWORK=off go build ./...
       - name: Scan Go dependencies
         uses: golang/govulncheck-action@v1
         with:
