@@ -1,6 +1,6 @@
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
-github.com/envplane/contracts v0.1.80 h1:zvnLHbL0DV+THU7mcrNl9SALOW4lGa84rKzuIkH+2rM=
-github.com/envplane/contracts v0.1.80/go.mod h1:/aVUc5NCmh/amgea7odPI1YxjxLf2dfFDvuOieTUgYs=
+github.com/envplane/contracts v0.1.81 h1:0e/kmKQWzajlztwQ4IzobMu3FG5AWBQA+yxKYiZ/1/g=
+github.com/envplane/contracts v0.1.81/go.mod h1:/aVUc5NCmh/amgea7odPI1YxjxLf2dfFDvuOieTUgYs=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pretty v0.3.0 h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=
