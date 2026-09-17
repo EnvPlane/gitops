@@ -40,6 +40,18 @@ type FluxRenderer struct {
 	options FluxOptions
 }
 
+// Preview Kustomizations deliberately use a short, bounded health-check
+// window. A source revision event is normally reconciled immediately by Flux;
+// when a cluster runs an older controller without
+// CancelHealthCheckOnNewRevision, this timeout still bounds recovery from a
+// stale health check instead of retaining an obsolete desired state for a
+// quarter hour.
+const (
+	previewFluxInterval      = "1m"
+	previewFluxRetryInterval = "30s"
+	previewFluxTimeout       = "2m"
+)
+
 func NewFluxRenderer(options FluxOptions) FluxRenderer {
 	return FluxRenderer{options: options}
 }
@@ -739,7 +751,10 @@ func serviceTagKey(name string) string {
 }
 
 var fluxTemplate = template.Must(template.New("flux").Funcs(template.FuncMap{
-	"yamlScalar": quoteYAMLScalar,
+	"yamlScalar":               quoteYAMLScalar,
+	"previewFluxInterval":      func() string { return previewFluxInterval },
+	"previewFluxRetryInterval": func() string { return previewFluxRetryInterval },
+	"previewFluxTimeout":       func() string { return previewFluxTimeout },
 }).Parse(`---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
@@ -752,9 +767,9 @@ metadata:
     envplane.io/product: {{ .Environment.Product | yamlScalar }}
     envplane.io/mode: {{ .Environment.Mode | yamlScalar }}
 spec:
-  interval: 30m
-  retryInterval: 2m
-  timeout: 15m
+  interval: {{ previewFluxInterval }}
+  retryInterval: {{ previewFluxRetryInterval }}
+  timeout: {{ previewFluxTimeout }}
   wait: true
   prune: true
 {{- if .Options.DependsOnName }}
