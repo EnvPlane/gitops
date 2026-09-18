@@ -344,10 +344,13 @@ func (w *RepositoryWriter) prepare(ctx context.Context) error {
 			}
 		}
 	} else {
-		if err := runGit(ctx, w.target.Workspace, "checkout", "--no-guess", w.target.Branch); err != nil {
+		// The workspace is an operation cache, never a source of user-authored
+		// manifests. An interrupted reconciliation may have left generated files
+		// dirty; discard them before syncing so cleanup can retry deterministically.
+		if err := runGit(ctx, w.target.Workspace, "checkout", "-f", "--no-guess", w.target.Branch); err != nil {
 			return err
 		}
-		if err := runGitWithSecret(ctx, w.target.Workspace, w.target.SecretValue, "pull", "--ff-only", "--", "origin", w.target.Branch); err != nil {
+		if err := runGit(ctx, w.target.Workspace, "reset", "--hard", "origin/"+w.target.Branch); err != nil {
 			return err
 		}
 	}
