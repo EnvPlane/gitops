@@ -1,0 +1,59 @@
+{
+  "ticket": "INSTALL-BILL-011",
+  "change": "Align published contracts pin and immutable provenance; no application behavior or deployment change",
+  "contracts": {
+    "formatVersion": 1,
+    "version": "v0.1.119",
+    "sourceCommit": "1964cf717a622c7f138279d0e5286eebc243f42d",
+    "moduleSum": "h1:F+Y/ssJSCLki8GyhJjHwaRSbeVGYioABHBTH4O8nrZE=",
+    "goModSum": "h1:rXB6cI9lPXUPMVHkHD9A0aetll7PZu6Co+3KR3RHo48=",
+    "openapiSha256": "e6bbab2f61469f7d5bdcf5545f3a7c0db651527c85ff0fb9983cfa1e8487f333"
+  },
+  "base_source": "ca6aa0ba822f4e2e11f57ea2f3bcfdcdf272b1ad",
+  "environment": {
+    "GOWORK": "off",
+    "GOTOOLCHAIN": "go1.26.9",
+    "contracts_replace": false,
+    "driver_relative_runner_gitops_replaces": "retained where existing"
+  },
+  "commands": [
+    "go mod tidy",
+    "go test -race -count=1 -json ./...",
+    "go build ./...",
+    "go vet ./...",
+    "python3 -B scripts/test-contract-snapshot.py",
+    "python3 -B scripts/check-contract-snapshot.py",
+    "git diff --check"
+  ],
+  "modules": [
+    {
+      "name": "gitops",
+      "passed_tests": 51,
+      "skipped_tests": [],
+      "failed_tests": [],
+      "passed_packages": 2,
+      "module": ".",
+      "snapshot_unit_tests": 9,
+      "checks": {
+        "race": "PASS",
+        "build": "PASS",
+        "vet": "PASS",
+        "reviewed_published_snapshot": "PASS",
+        "snapshot_unit_regressions": "PASS",
+        "diff_check": "PASS"
+      },
+      "artifact_sha256": {
+        "gitops-test.jsonl": "6720432478f97b3f1c3a32b0e8a15c9e8e6ca3f6b1dc75a82e56cd26c36e35df",
+        "gitops-snapshot-unit.log": "956a0c36ba55bb397484b342828153465a6efc7aa26b941cbfc3ed4f89e9cc8a",
+        "gitops-snapshot.log": "6b01a2416e81fc2def9d46229fc81f0f28dba647cdb57cd4f05a6831afa632c0"
+      }
+    }
+  ],
+  "evidence_class": "local independent published-module verification, not hosted or deployed",
+  "actual_aws_provider": "NONE",
+  "unverified_gates": [
+    "exact-head hosted consumer workflows after coordinated push",
+    "runtime deployment/actual IAM/custody/Stripe test gates remain issuer011"
+  ],
+  "live_fixture_policy": "Default Go suites only; no integration tag. Installed DB/owned-live fixture env flags disabled; skipped tests listed verbatim."
+}
