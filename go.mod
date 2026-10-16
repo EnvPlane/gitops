@@ -3,7 +3,7 @@ module github.com/envplane/gitops
 go 1.26.9
 
 require (
-	github.com/envplane/contracts v0.1.121
+	github.com/envplane/contracts v0.1.122
 	gopkg.in/yaml.v3 v3.0.1
 )
 
